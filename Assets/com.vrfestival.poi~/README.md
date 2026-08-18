@@ -35,7 +35,7 @@ https://github.com/InTheDokubo/Poi_VREnnnichi.git?path=/Assets/com.vrfestival.po
 安定版を固定する場合:
 
 ```text
-https://github.com/InTheDokubo/Poi_VREnnnichi.git?path=/Assets/com.vrfestival.poi~#v1.0.0
+https://github.com/InTheDokubo/Poi_VREnnnichi.git?path=/Assets/com.vrfestival.poi~#v1.0.3
 ```
 
 Repositoryのサブディレクトリに置く場合は、UPMのGit path指定形式を使用してください。
@@ -86,6 +86,8 @@ PoiはSample、Camera、GameManager、Goldfishへ依存しません。WaterもPo
 - `PoiPaperSurface.GetCell(Vector2Int)`でDamage、Wetness、Broken状態を取得
 
 ## VR Integration
+
+`XRGrabInteractable` must be added to `PoiRoot` (the object with the `Rigidbody`), never to the child `Handle`. Assign `GrabAttach` to its Attach Transform. Velocity Tracking, Kinematic, and Instantaneous movement are supported by the water-damage motion sampler. Do not drive the poi with both XR Interaction Toolkit and `PoiGrabTarget.BeginGrab` simultaneously.
 
 特定XR Frameworkには依存しません。`PoiGrabTarget`を独自Interactorから呼ぶか、XR Interaction Toolkit導入後に`XRGrabInteractable`を追加し、`GrabAttach`をAttach Transformへ指定します。移動責任者は一方だけにしてください。
 

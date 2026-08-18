@@ -18,6 +18,13 @@
 
 ## VR Grab
 
+### XR Interaction Toolkit setup
+
+- Add `XRGrabInteractable` to `PoiRoot`, which already owns the `Rigidbody`. Never add it to the child `Handle`; doing so moves only that child and separates the visible poi.
+- Set the interactable's Attach Transform to the existing `GrabAttach` child.
+- Let either XR Interaction Toolkit or `PoiGrabTarget` move the object, not both at the same time.
+- Velocity Tracking, Kinematic, and Instantaneous movement are supported for water damage. Transform motion is sampled when XR does not expose a useful Rigidbody velocity.
+
 `PoiRoot`にはRigidbody、軽量Primitive Collider、`PoiGrabTarget`、`GrabAttach`が存在する。
 
 - `GrabAttach`は持ち手中央の推奨握り位置。位置と回転はPrefab Variantで調整可能。
