@@ -35,7 +35,7 @@ https://github.com/InTheDokubo/Poi_VREnnnichi.git?path=/Assets/com.vrfestival.po
 安定版を固定する場合:
 
 ```text
-https://github.com/InTheDokubo/Poi_VREnnnichi.git?path=/Assets/com.vrfestival.poi~#v1.0.3
+https://github.com/InTheDokubo/Poi_VREnnnichi.git?path=/Assets/com.vrfestival.poi~#v1.0.4
 ```
 
 Repositoryのサブディレクトリに置く場合は、UPMのGit path指定形式を使用してください。
@@ -73,6 +73,36 @@ PoiはSample、Camera、GameManager、Goldfishへ依存しません。WaterもPo
 - `PoiPaperSettings`: 耐久力、濡れやすさ、拡散、乾燥、水中Damage。
 - `PoiFrameVisualSettings`: Frame色、Material、外部3Dモデル、位置・回転・スケール。
 - `PoiConfiguration`: 上記設定をPoiへ適用します。
+
+### 紙の物性を変更する
+
+1. Projectウィンドウで `Create > Poi > 紙の物性設定` を選び、設定Assetを作成します。
+2. シーンまたはPrefab Variantの`PoiRoot`を選択します。
+3. `Poi Configuration > Paper Settings`へ作成したAssetを指定します。
+4. 再生開始時に自動適用されます。再生中にAssetを変更した場合は、`Poi Configuration`のコンテキストメニューから`Apply Configuration`を実行します。
+
+Package内の`DefaultPaperSettings`を直接編集せず、利用プロジェクトの`Assets/PoiSettings/`などへ独自Assetを保存してください。Package更新で独自設定が失われるのを防げます。
+
+Inspectorには「破れやすい」「標準」「丈夫」のプリセットがあります。プリセットを出発点に、次の項目を調整してください。
+
+| やりたいこと | 主に変更する項目 | 調整方向 |
+|---|---|---|
+| 紙全体を丈夫にする | 破れるまでの耐久値 | 上げる |
+| 衝突への耐性を上げる | ダメージの受けやすさ | 下げる |
+| 濡れても強度を保つ | 濡れたときに残る強度 | 上げる |
+| 早く濡らす | 濡れやすさ | 上げる |
+| 染みを広げる | 染みの広がりやすさ | 上げる |
+| 早く乾かす | 乾きやすさ | 上げる |
+| 水中で振り回しても壊れにくくする | ダメージが始まる水中速度 | 上げる |
+| 水の抵抗による破損を弱める | 水中移動ダメージ | 下げる |
+| 水へ入れた瞬間の破損を弱める | 水へ入れた瞬間のダメージ | 下げる |
+| 突然大きく破れるのを抑える | 1回あたりの最大水ダメージ | 下げる |
+
+「衝突への耐性」は専用の独立値ではなく、`破れるまでの耐久値`と`ダメージの受けやすさ`の組み合わせで決まります。水中移動だけを調整したい場合は「水中移動への耐性」の4項目を変更してください。
+
+### フレームの外観を変更する
+
+`Create > Poi > フレーム外観設定`からAssetを作り、`PoiRoot > Poi Configuration > Frame Visual Settings`へ指定します。色やMaterialのほか、外部3DモデルのPrefabと位置・回転・拡大率を設定できます。外部モデルは見た目専用とし、`Rigidbody`、Collider、`XRGrabInteractable`を外部モデルやHandleへ追加しないでください。
 
 ## Public API
 

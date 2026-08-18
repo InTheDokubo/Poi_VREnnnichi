@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4] - 2026-08-18
+
+- Added Japanese custom Inspectors for paper physics, frame appearance, and Poi configuration
+- Added beginner-friendly labels, tooltips, guidance, and fragile/standard/durable paper presets
+- Documented how each setting affects drying, collision durability, wet strength, and water-movement resistance
+- Kept serialized field names unchanged for compatibility with existing settings assets
+
 ## [1.0.3] - 2026-08-18
 
 - Detected water-damage motion when XR Interaction Toolkit uses Kinematic or Instantaneous movement
