@@ -1,0 +1,18 @@
+{
+  "name": "VRFestival.Poi.Editor",
+  "rootNamespace": "Poi.Editor",
+  "references": [
+    "VRFestival.Poi.Runtime"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
