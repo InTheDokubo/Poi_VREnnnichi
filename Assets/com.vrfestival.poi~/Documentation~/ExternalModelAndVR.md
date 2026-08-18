@@ -10,7 +10,7 @@
 - 原点はFrameリングの中心を推奨する。
 - モデルのTransformはPosition `(0,0,0)`、Rotation `(0,0,0)`、Scale `(1,1,1)`を推奨する。
 - 原点・向き・寸法が異なる場合は設定assetのLocal Position / Euler Angles / Scaleで補正する。
-- Built-in Render Pipelineで表示可能なMaterialを使用する。
+- 利用プロジェクトのRender Pipeline（Built-inまたはURP）で表示可能なMaterialを使用する。Package標準Frame Materialは両方へ対応する。
 - 外部Prefabは外観専用。Collider、Rigidbody、破損スクリプト、Grabスクリプトは不要。
 - 外部Colliderは初期設定で無効化され、標準Frame/Handle Colliderが物理判定を担当する。
 - Paperは外部モデルへ統合しない。動的破損する`Paper`子Objectをそのまま使用する。

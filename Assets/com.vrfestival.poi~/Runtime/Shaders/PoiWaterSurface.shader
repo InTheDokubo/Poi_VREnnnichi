@@ -10,6 +10,58 @@ Shader "Poi/VR Water Surface"
     }
     SubShader
     {
+        PackageRequirements { "com.unity.render-pipelines.universal" }
+        Tags { "Queue"="Transparent" "RenderType"="Transparent" "RenderPipeline"="UniversalPipeline" }
+        Pass
+        {
+            Tags { "LightMode"="UniversalForward" }
+            Cull Off
+            ZWrite Off
+            Blend SrcAlpha OneMinusSrcAlpha
+
+            HLSLPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+            struct Attributes { float4 positionOS : POSITION; };
+            struct Varyings
+            {
+                float4 positionCS : SV_POSITION;
+                float3 positionWS : TEXCOORD0;
+            };
+            CBUFFER_START(UnityPerMaterial)
+                half4 _Color;
+                half _WaveStrength;
+                half _WaveScale;
+                half _WaveSpeed;
+                half _Smoothness;
+            CBUFFER_END
+
+            Varyings vert(Attributes input)
+            {
+                Varyings output;
+                float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                float t = _Time.y * _WaveSpeed;
+                float a = sin((positionWS.x + positionWS.z * 0.63) * _WaveScale + t);
+                float b = sin((positionWS.z - positionWS.x * 0.41) * (_WaveScale * 1.37) - t * 0.83);
+                positionWS.y += (a + b) * 0.5 * _WaveStrength;
+                output.positionWS = positionWS;
+                output.positionCS = TransformWorldToHClip(positionWS);
+                return output;
+            }
+
+            half4 frag(Varyings input) : SV_Target
+            {
+                float t = _Time.y * _WaveSpeed;
+                half shimmer = sin((input.positionWS.x - input.positionWS.z) * _WaveScale * 1.8 + t * 1.2) * 0.035h;
+                return half4(saturate(_Color.rgb + shimmer), _Color.a);
+            }
+            ENDHLSL
+        }
+    }
+    SubShader
+    {
         Tags { "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjector"="True" }
         LOD 150
         Cull Off

@@ -40,6 +40,11 @@ namespace Poi.Editor
                 string path = AssetDatabase.GUIDToAssetPath(materialGuids[i]);
                 Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
                 if (material == null || material.shader == null) { Debug.LogError("Missing Material or Shader: " + path); failures++; }
+                else if (!material.shader.isSupported)
+                {
+                    Debug.LogError("Material shader is not supported by the active render pipeline: " + path);
+                    failures++;
+                }
                 else if (material.name == "PoiPaper" && !material.HasProperty("_DissolveAmount"))
                 {
                     Debug.LogError("PoiPaper shader is missing detached-fragment dissolve support: " + path);

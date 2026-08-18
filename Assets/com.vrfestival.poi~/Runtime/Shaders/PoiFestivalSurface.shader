@@ -1,11 +1,14 @@
-Shader "Poi/VR Water Ripple"
+Shader "Poi/Festival Surface"
 {
-    Properties { _Color ("Color", Color) = (0.7,0.95,1,0.7) }
+    Properties
+    {
+        [MainColor] _Color ("Color", Color) = (1,1,1,1)
+    }
+
     SubShader
     {
         PackageRequirements { "com.unity.render-pipelines.universal" }
-        Tags { "Queue"="Transparent+10" "RenderType"="Transparent" "RenderPipeline"="UniversalPipeline" }
-        Cull Off ZWrite Off Blend SrcAlpha OneMinusSrcAlpha
+        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" }
         Pass
         {
             Tags { "LightMode"="UniversalForward" }
@@ -13,20 +16,28 @@ Shader "Poi/VR Water Ripple"
             #pragma vertex vert
             #pragma fragment frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
             struct Attributes { float4 positionOS : POSITION; };
             struct Varyings { float4 positionCS : SV_POSITION; };
             CBUFFER_START(UnityPerMaterial)
                 half4 _Color;
             CBUFFER_END
-            Varyings vert(Attributes input) { Varyings output; output.positionCS = TransformObjectToHClip(input.positionOS.xyz); return output; }
+
+            Varyings vert(Attributes input)
+            {
+                Varyings output;
+                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                return output;
+            }
+
             half4 frag(Varyings input) : SV_Target { return _Color; }
             ENDHLSL
         }
     }
+
     SubShader
     {
-        Tags { "Queue"="Transparent+10" "RenderType"="Transparent" }
-        Cull Off ZWrite Off Lighting Off Blend SrcAlpha OneMinusSrcAlpha
+        Tags { "RenderType"="Opaque" }
         Pass
         {
             CGPROGRAM
@@ -35,9 +46,9 @@ Shader "Poi/VR Water Ripple"
             #include "UnityCG.cginc"
             fixed4 _Color;
             struct appdata { float4 vertex : POSITION; };
-            struct v2f { float4 vertex : SV_POSITION; };
-            v2f vert(appdata v) { v2f o; o.vertex = UnityObjectToClipPos(v.vertex); return o; }
-            fixed4 frag(v2f i) : SV_Target { return _Color; }
+            struct v2f { float4 position : SV_POSITION; };
+            v2f vert(appdata input) { v2f output; output.position = UnityObjectToClipPos(input.vertex); return output; }
+            fixed4 frag(v2f input) : SV_Target { return _Color; }
             ENDCG
         }
     }

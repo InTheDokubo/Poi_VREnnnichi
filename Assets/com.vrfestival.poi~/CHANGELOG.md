@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.2] - 2026-08-18
+
+- Fixed Basic Sample controls in Input System-only projects without adding a hard Input System dependency
+- Added conditional URP SubShaders for paper, water surface, ripple, frame and handle materials
+- Kept Built-in Render Pipeline support and documented automatic and optional package requirements
+
 ## [1.0.1] - 2026-08-18
 
 - Added noise-based automatic dissolve and cleanup for detached paper fragments
