@@ -5,9 +5,24 @@ Unity向けの軽量な縁日ポイ＋水システムです。動的な紙のDam
 ## Requirements
 
 - Unity 6000.3以降（検証バージョン: 6000.3.21f1）
-- Built-in Render Pipeline
-- 外部Package依存なし
+- Built-in Render Pipeline / Universal Render Pipeline (URP)
+- 第三者製Packageへの必須依存なし
 - XR Interaction Toolkit、Input System、特定Tag/Layerへの必須依存なし
+
+### Dependencies
+
+`package.json`から以下のUnity標準Moduleが自動導入されます。通常は利用者が別途追加する必要はありません。
+
+- `com.unity.modules.physics`
+- `com.unity.modules.particlesystem`
+- `com.unity.modules.imgui`（Basic Sampleの画面説明用）
+
+任意・利用環境依存：
+
+- URPプロジェクトでは`com.unity.render-pipelines.universal`が必要です。通常のURP Templateには最初から導入されています。Built-inプロジェクトへURPを追加する必要はありません。
+- Input Systemは必須ではありません。Basic SampleはInput Systemのみ、旧Input Managerのみ、Bothの各設定を自動判別します。
+- XR Interaction Toolkitは必須ではありません。VR Grabを使用する場合のみ利用側プロジェクトへ導入してください。
+- HDRPは現時点で専用Shaderを同梱していません。
 
 ## Installation
 
@@ -34,6 +49,17 @@ https://github.com/<owner>/<repository>.git?path=/path/to/com.vrfestival.poi#v1.
 1. Package Managerで`Samples > Basic Sample > Import`を実行します。
 2. Importされた`Demo.unity`を開いて再生します。
 3. 独自Sceneでは`Runtime/Prefabs/Poi.prefab`と`Water.prefab`をDrag & Dropします。
+
+### Updating an imported Sample
+
+SamplesはPackage外の`Assets/Samples/VR Festival Poi System/<version>/`へコピーされるため、自動更新されません。旧`1.0.1` Sampleを導入済みの場合はそのフォルダーを削除し、Package Managerから`1.0.2`のBasic Sampleを再Importしてください。
+
+### Pink materials
+
+- URPではPackage Managerに`Universal RP`が導入され、Project SettingsのGraphics／QualityへURP Pipeline Assetが設定されていることを確認してください。
+- Built-inでは追加Packageは不要です。
+- 本PackageのMaterialへRender Pipeline Converterを実行する必要はありません。Built-in／URP用SubShaderを自動選択します。
+- HDRPでは専用Shaderへの差し替えが必要です。
 
 ## Prefabs
 
@@ -82,7 +108,7 @@ PoiはSample、Camera、GameManager、Goldfishへ依存しません。WaterもPo
 
 ## Known Limitations
 
-- Built-in Render Pipeline専用Shader。URP/HDRPはMaterial/Shader差し替えが必要です。
+- Built-inとURP用Shaderを同梱しています。HDRPではMaterial/Shaderの差し替えが必要です。
 - 本格流体、屈折、反射、泡、魚AI、ゲームスコアは含みません。
 - 実機VR入力は利用側XR Frameworkで接続します。
 
