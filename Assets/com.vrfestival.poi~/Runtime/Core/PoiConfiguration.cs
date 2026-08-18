@@ -10,6 +10,7 @@ namespace Poi
         [SerializeField] private Transform frame;
         [SerializeField] private PoiPaperDamageSystem damageSystem;
         [SerializeField] private PoiPaperWaterInteraction waterInteraction;
+        [SerializeField] private PoiPaperMeshGenerator meshGenerator;
 
         private GameObject externalFrameInstance;
         private MaterialPropertyBlock frameProperties;
@@ -19,6 +20,7 @@ namespace Poi
         public Transform Frame { set => frame = value; }
         public PoiPaperDamageSystem DamageSystem { set => damageSystem = value; }
         public PoiPaperWaterInteraction WaterInteraction { set => waterInteraction = value; }
+        public PoiPaperMeshGenerator MeshGenerator { set => meshGenerator = value; }
 
         private void Awake() => ApplyConfiguration();
 
@@ -30,6 +32,7 @@ namespace Poi
             {
                 damageSystem.ApplySettings(paperSettings);
                 waterInteraction.ApplySettings(paperSettings);
+                meshGenerator.ApplySettings(paperSettings);
             }
             ApplyFrameVisual();
         }
@@ -77,6 +80,7 @@ namespace Poi
             if (frame == null) frame = transform.Find("Frame");
             if (damageSystem == null) damageSystem = GetComponentInChildren<PoiPaperDamageSystem>(true);
             if (waterInteraction == null) waterInteraction = GetComponentInChildren<PoiPaperWaterInteraction>(true);
+            if (meshGenerator == null) meshGenerator = GetComponentInChildren<PoiPaperMeshGenerator>(true);
         }
     }
 }

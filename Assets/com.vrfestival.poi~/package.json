@@ -1,6 +1,6 @@
 {
   "name": "com.vrfestival.poi",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "VR Festival Poi System",
   "description": "Lightweight dynamic goldfish-scooping poi and water system for Unity.",
   "unity": "6000.3",

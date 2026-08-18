@@ -17,6 +17,12 @@ namespace Poi
         [Min(0f)] public float dryingRate = 0.025f;
         [Range(0.02f, 0.5f)] public float wetnessUpdateInterval = 0.1f;
 
+        [Header("Detached Fragments")]
+        [Tooltip("Seconds a detached paper fragment remains under normal Rigidbody physics before dissolving.")]
+        [Min(0f)] public float fragmentLifetime = 0.9f;
+        [Tooltip("Seconds used by the noise dissolve before the fragment is destroyed.")]
+        [Min(0.05f)] public float fragmentDissolveDuration = 0.75f;
+
         [Header("Water Damage")]
         [Min(0f)] public float minimumWaterDamageSpeed = 0.35f;
         [Min(0f)] public float waterDamageMultiplier = 0.7f;

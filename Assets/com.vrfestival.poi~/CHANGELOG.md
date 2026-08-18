@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1] - 2026-08-18
+
+- Added noise-based automatic dissolve and cleanup for detached paper fragments
+- Added configurable fragment lifetime and dissolve duration
+- Added Grid Resolution performance warnings and Grid/Visual Mesh Inspector guidance
+- Added area-based connected-component cleanup for tiny visual mesh islands
+
 ## [1.0.0] - 2026-08-18
 
 - Dynamic paper damage and procedural tear

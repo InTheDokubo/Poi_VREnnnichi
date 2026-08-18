@@ -20,6 +20,8 @@ MonoBehaviour:
   wetnessDiffusionRate: 0.9
   dryingRate: 0.025
   wetnessUpdateInterval: 0.1
+  fragmentLifetime: 0.9
+  fragmentDissolveDuration: 0.75
   minimumWaterDamageSpeed: 0.35
   waterDamageMultiplier: 0.7
   waterEntryMultiplier: 0.35
