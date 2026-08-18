@@ -10,10 +10,16 @@ namespace Poi
         [Header("Broken Boundary")]
         [SerializeField, Range(0f, 0.45f)] private float boundaryRoughness = 0.22f;
         [SerializeField] private int boundarySeed = 1847;
+        [Tooltip("Additional visual subdivisions per simulation cell. Increase this to improve tear-edge detail without increasing the simulation grid resolution.")]
         [SerializeField, Range(1, 4)] private int meshSubdivisions = 4;
         [SerializeField, Range(0.3f, 0.7f)] private float contourThreshold = 0.48f;
+        [Tooltip("Visual-only connected components smaller than this fraction of the generated paper area are omitted. The largest component is always retained.")]
+        [SerializeField, Range(0f, 0.01f)] private float visualIslandMinimumAreaRatio = 0.0005f;
         [Header("Collision")]
         [SerializeField, Min(0.0002f)] private float colliderThickness = 0.0006f;
+        [Header("Detached Fragments")]
+        [SerializeField, Min(0f)] private float fragmentLifetime = 0.9f;
+        [SerializeField, Min(0.05f)] private float fragmentDissolveDuration = 0.75f;
 
         private PoiPaperSurface surface;
         private MeshFilter meshFilter;
@@ -24,9 +30,31 @@ namespace Poi
         private readonly List<Vector3> normals = new List<Vector3>(2400);
         private readonly List<Vector2> uvs = new List<Vector2>(1200);
         private readonly List<int> triangles = new List<int>(7000);
+        private readonly List<int> candidateTriangles = new List<int>(3500);
         private readonly List<GameObject> detachedFragments = new List<GameObject>(8);
+        private readonly Dictionary<int, int> firstTriangleByVertex = new Dictionary<int, int>(1200);
+        private int[] componentParents;
+        private float[] componentAreas;
 
-        public int DetachedFragmentCount => detachedFragments.Count;
+        public int LastVisualComponentCount { get; private set; }
+        public int LastRemovedVisualIslandCount { get; private set; }
+        public float LastRemovedVisualIslandArea { get; private set; }
+
+        public int DetachedFragmentCount
+        {
+            get
+            {
+                PruneDetachedFragmentList();
+                return detachedFragments.Count;
+            }
+        }
+
+        public void ApplySettings(PoiPaperSettings settings)
+        {
+            if (settings == null) return;
+            fragmentLifetime = Mathf.Max(0f, settings.fragmentLifetime);
+            fragmentDissolveDuration = Mathf.Max(0.05f, settings.fragmentDissolveDuration);
+        }
 
         private void Awake()
         {
@@ -62,6 +90,7 @@ namespace Poi
             normals.Clear();
             uvs.Clear();
             triangles.Clear();
+            candidateTriangles.Clear();
 
             for (int y = 0; y < vertexResolution; y++)
             {
@@ -104,13 +133,15 @@ namespace Poi
 
                     Vector2 firstCentroid = (bottomLeft + topLeft + topRight) / 3f;
                     if (ShouldRenderTriangle(firstCentroid, x, y, 0))
-                        AddDoubleSidedTriangle(a, c, d, frontVertexCount);
+                        AddCandidateTriangle(a, c, d);
 
                     Vector2 secondCentroid = (bottomLeft + topRight + bottomRight) / 3f;
                     if (ShouldRenderTriangle(secondCentroid, x, y, 1))
-                        AddDoubleSidedTriangle(a, d, b, frontVertexCount);
+                        AddCandidateTriangle(a, d, b);
                 }
             }
+
+            BuildConnectedVisualMesh(frontVertexCount);
 
             if (runtimeMesh == null)
             {
@@ -131,6 +162,122 @@ namespace Poi
         {
             triangles.Add(a); triangles.Add(b); triangles.Add(c);
             triangles.Add(a + backOffset); triangles.Add(c + backOffset); triangles.Add(b + backOffset);
+        }
+
+        private void AddCandidateTriangle(int a, int b, int c)
+        {
+            candidateTriangles.Add(a);
+            candidateTriangles.Add(b);
+            candidateTriangles.Add(c);
+        }
+
+        private void BuildConnectedVisualMesh(int backOffset)
+        {
+            int triangleCount = candidateTriangles.Count / 3;
+            LastVisualComponentCount = 0;
+            LastRemovedVisualIslandCount = 0;
+            LastRemovedVisualIslandArea = 0f;
+            if (triangleCount == 0) return;
+
+            EnsureComponentBuffers(triangleCount);
+            firstTriangleByVertex.Clear();
+            for (int triangle = 0; triangle < triangleCount; triangle++)
+            {
+                componentParents[triangle] = triangle;
+                componentAreas[triangle] = 0f;
+                int offset = triangle * 3;
+                ConnectVertex(candidateTriangles[offset], triangle);
+                ConnectVertex(candidateTriangles[offset + 1], triangle);
+                ConnectVertex(candidateTriangles[offset + 2], triangle);
+            }
+
+            for (int triangle = 0; triangle < triangleCount; triangle++)
+            {
+                int offset = triangle * 3;
+                Vector3 a = vertices[candidateTriangles[offset]];
+                Vector3 b = vertices[candidateTriangles[offset + 1]];
+                Vector3 c = vertices[candidateTriangles[offset + 2]];
+                float area = Vector3.Cross(b - a, c - a).magnitude * 0.5f;
+                int root = FindComponent(triangle);
+                componentAreas[root] += area;
+            }
+
+            int largestRoot = -1;
+            float largestArea = -1f;
+            for (int triangle = 0; triangle < triangleCount; triangle++)
+            {
+                if (FindComponent(triangle) != triangle) continue;
+                LastVisualComponentCount++;
+                if (componentAreas[triangle] > largestArea)
+                {
+                    largestArea = componentAreas[triangle];
+                    largestRoot = triangle;
+                }
+            }
+
+            var removedRoots = new HashSet<int>();
+            // Use the full physical paper area rather than triangle count or
+            // current remaining area, so the cutoff is stable across visual
+            // subdivisions and does not shrink as the paper is damaged.
+            float minimumArea = Mathf.PI * surface.Radius * surface.Radius * visualIslandMinimumAreaRatio;
+            for (int triangle = 0; triangle < triangleCount; triangle++)
+            {
+                int root = FindComponent(triangle);
+                if (root != largestRoot && componentAreas[root] < minimumArea)
+                {
+                    if (removedRoots.Add(root))
+                    {
+                        LastRemovedVisualIslandCount++;
+                        LastRemovedVisualIslandArea += componentAreas[root];
+                    }
+                    continue;
+                }
+
+                int offset = triangle * 3;
+                AddDoubleSidedTriangle(
+                    candidateTriangles[offset],
+                    candidateTriangles[offset + 1],
+                    candidateTriangles[offset + 2],
+                    backOffset);
+            }
+        }
+
+        private void ConnectVertex(int vertex, int triangle)
+        {
+            if (firstTriangleByVertex.TryGetValue(vertex, out int connectedTriangle))
+                UnionComponents(triangle, connectedTriangle);
+            else
+                firstTriangleByVertex.Add(vertex, triangle);
+        }
+
+        private void EnsureComponentBuffers(int triangleCount)
+        {
+            if (componentParents == null || componentParents.Length < triangleCount)
+                componentParents = new int[Mathf.NextPowerOfTwo(triangleCount)];
+            if (componentAreas == null || componentAreas.Length < triangleCount)
+                componentAreas = new float[Mathf.NextPowerOfTwo(triangleCount)];
+            else
+                System.Array.Clear(componentAreas, 0, triangleCount);
+        }
+
+        private int FindComponent(int triangle)
+        {
+            int root = triangle;
+            while (componentParents[root] != root) root = componentParents[root];
+            while (componentParents[triangle] != triangle)
+            {
+                int next = componentParents[triangle];
+                componentParents[triangle] = root;
+                triangle = next;
+            }
+            return root;
+        }
+
+        private void UnionComponents(int a, int b)
+        {
+            int rootA = FindComponent(a);
+            int rootB = FindComponent(b);
+            if (rootA != rootB) componentParents[rootB] = rootA;
         }
 
         private bool ShouldRenderTriangle(Vector2 normalized, int fineX, int fineY, int triangleIndex)
@@ -217,7 +364,12 @@ namespace Poi
             fragment.transform.SetPositionAndRotation(transform.position, transform.rotation);
             fragment.transform.localScale = transform.lossyScale;
             fragment.AddComponent<MeshFilter>().sharedMesh = fragmentMesh;
-            fragment.AddComponent<MeshRenderer>().sharedMaterial = GetComponent<MeshRenderer>().sharedMaterial;
+            MeshRenderer sourceRenderer = GetComponent<MeshRenderer>();
+            MeshRenderer fragmentRenderer = fragment.AddComponent<MeshRenderer>();
+            fragmentRenderer.sharedMaterial = sourceRenderer.sharedMaterial;
+            var sourceProperties = new MaterialPropertyBlock();
+            sourceRenderer.GetPropertyBlock(sourceProperties);
+            fragmentRenderer.SetPropertyBlock(sourceProperties);
             BoxCollider collider = fragment.AddComponent<BoxCollider>();
             collider.center = fragmentMesh.bounds.center;
             collider.size = new Vector3(fragmentMesh.bounds.size.x, fragmentMesh.bounds.size.y, colliderThickness);
@@ -226,15 +378,45 @@ namespace Poi
             body.linearDamping = 0.08f;
             body.angularDamping = 0.08f;
             body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-            fragment.AddComponent<PoiPaperDetachedFragment>().OwnedMesh = fragmentMesh;
+            PoiPaperDetachedFragment fragmentLifecycle = fragment.AddComponent<PoiPaperDetachedFragment>();
+            fragmentLifecycle.OwnedMesh = fragmentMesh;
+            fragmentLifecycle.Initialize(
+                this,
+                fragmentRenderer,
+                collider,
+                body,
+                fragmentLifetime,
+                fragmentDissolveDuration,
+                Hash01(fragmentCells[0].x, fragmentCells[0].y, fragmentCells.Count) * 100f);
+            PruneDetachedFragmentList();
             detachedFragments.Add(fragment);
         }
 
         public void ClearDetachedFragments()
         {
             for (int i = detachedFragments.Count - 1; i >= 0; i--)
-                if (detachedFragments[i] != null) Destroy(detachedFragments[i]);
+                if (detachedFragments[i] != null)
+                {
+                    PoiPaperDetachedFragment lifecycle = detachedFragments[i].GetComponent<PoiPaperDetachedFragment>();
+                    if (lifecycle != null) lifecycle.Dispose();
+                    else
+                    {
+                        detachedFragments[i].SetActive(false);
+                        Destroy(detachedFragments[i]);
+                    }
+                }
             detachedFragments.Clear();
+        }
+
+        internal void NotifyDetachedFragmentDestroyed(GameObject fragment)
+        {
+            detachedFragments.Remove(fragment);
+        }
+
+        private void PruneDetachedFragmentList()
+        {
+            for (int i = detachedFragments.Count - 1; i >= 0; i--)
+                if (detachedFragments[i] == null) detachedFragments.RemoveAt(i);
         }
 
         private void BuildMergedRowColliders()

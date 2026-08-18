@@ -40,6 +40,11 @@ namespace Poi.Editor
                 string path = AssetDatabase.GUIDToAssetPath(materialGuids[i]);
                 Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
                 if (material == null || material.shader == null) { Debug.LogError("Missing Material or Shader: " + path); failures++; }
+                else if (material.name == "PoiPaper" && !material.HasProperty("_DissolveAmount"))
+                {
+                    Debug.LogError("PoiPaper shader is missing detached-fragment dissolve support: " + path);
+                    failures++;
+                }
             }
             string[] sceneGuids = AssetDatabase.FindAssets("Demo t:Scene");
             for (int i = 0; i < sceneGuids.Length; i++)

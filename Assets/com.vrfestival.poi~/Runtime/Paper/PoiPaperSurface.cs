@@ -11,6 +11,7 @@ namespace Poi
     {
         [Header("Paper Region")]
         [SerializeField, Min(0.001f)] private float radius = 0.042f;
+        [Tooltip("Resolution of the logical paper simulation used for damage, wetness and break state. Higher values increase CPU cost. 32 is recommended for VR.")]
         [SerializeField, Min(1)] private int gridResolution = 32;
         [SerializeField, Min(0f)] private float surfaceTolerance = 0.005f;
 

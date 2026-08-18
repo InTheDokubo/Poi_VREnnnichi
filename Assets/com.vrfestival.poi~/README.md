@@ -68,8 +68,17 @@ PoiはSample、Camera、GameManager、Goldfishへ依存しません。WaterもPo
 - セルGameObjectなし
 - Wetness更新は既定10 Hz
 - 毎フレームのPaper Mesh/MeshCollider再生成なし
+- 切り離された紙片は短時間Rigidbodyで落下した後、Noise Dissolveして自動破棄されます。利用側でDestroyする必要はありません。
 - Rippleは固定数プール
 - Water Surfaceの微細波はGPU頂点変位
+
+### Simulation Grid vs Visual Mesh
+
+- `Grid Resolution`はDamage、Wetness、Water、Broken、Tear判定に使うCPU側Simulation解像度です。VRでは`32`を推奨します。
+- `Mesh Subdivisions`はSimulation Cellごとの追加Visual分割数です。穴や亀裂の輪郭を滑らかにしたい場合は、まずこちらを調整してください。
+- 例：`Grid Resolution = 32`、`Mesh Subdivisions = 4`ならSimulationは`32 x 32`のまま、Visual Meshは概ね`128 x 128`相当です。
+- Mesh SubdivisionsもMesh再構築頂点数を増やすため、必要以上に上げないでください。
+- `Grid Resolution >= 64`ではInspectorに性能警告、`>= 128`ではVR向けの強い警告を表示します。値自体はClampしません。
 
 ## Known Limitations
 
