@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3] - 2026-08-18
+
+- Detected water-damage motion when XR Interaction Toolkit uses Kinematic or Instantaneous movement
+- Accounted for both linear and angular Transform motion while the paper is submerged
+- Added validation for `XRGrabInteractable` placement on `PoiRoot` instead of the child `Handle`
+- Documented the supported XR Interaction Toolkit setup
+
 ## [1.0.2] - 2026-08-18
 
 - Fixed Basic Sample controls in Input System-only projects without adding a hard Input System dependency

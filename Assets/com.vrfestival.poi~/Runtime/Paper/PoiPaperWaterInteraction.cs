@@ -29,6 +29,12 @@ namespace Poi
         private Color32[] wetnessPixels;
         private MaterialPropertyBlock wetnessProperties;
         private MeshRenderer paperRenderer;
+        private Transform motionTransform;
+        private Vector3 previousMotionPosition;
+        private Quaternion previousMotionRotation;
+        private Vector3 sampledLinearVelocity;
+        private Vector3 sampledAngularVelocity;
+        private bool hasPreviousMotionPose;
 
         public void ApplySettings(PoiPaperSettings settings)
         {
@@ -48,12 +54,14 @@ namespace Poi
             surface = GetComponent<PoiPaperSurface>();
             damageSystem = GetComponent<PoiPaperDamageSystem>();
             body = GetComponentInParent<Rigidbody>();
+            motionTransform = body != null ? body.transform : transform.root;
             paperRenderer = GetComponent<MeshRenderer>();
             CreateWetnessTexture();
         }
 
         private void OnEnable()
         {
+            hasPreviousMotionPose = false;
             if (Application.isPlaying) CreateWetnessTexture();
         }
 
@@ -64,6 +72,7 @@ namespace Poi
 
         private void FixedUpdate()
         {
+            SampleMotion(Time.fixedDeltaTime);
             if (Time.time < nextUpdateTime) return;
             float dt = Mathf.Max(updateInterval, Time.fixedDeltaTime);
             nextUpdateTime = Time.time + updateInterval;
@@ -93,7 +102,7 @@ namespace Poi
                 if (!TryGetWater(point, out PoiWaterVolume water)) continue;
                 submergedCount++;
                 nextWetness[index] = Mathf.Clamp01(cell.Wetness + wettingRate * deltaTime);
-                Vector3 relativeVelocity = (body != null ? body.GetPointVelocity(point) : Vector3.zero) - water.GetWaterVelocity(point);
+                Vector3 relativeVelocity = GetPointVelocity(point) - water.GetWaterVelocity(point);
                 float speed = relativeVelocity.magnitude;
                 if (speed > minimumDamageSpeed)
                 {
@@ -117,6 +126,45 @@ namespace Poi
             }
             previousSubmergedCount = submergedCount;
             UpdateWetnessVisual();
+        }
+
+        private void SampleMotion(float deltaTime)
+        {
+            if (motionTransform == null) motionTransform = body != null ? body.transform : transform.root;
+            Vector3 position = motionTransform.position;
+            Quaternion rotation = motionTransform.rotation;
+            if (!hasPreviousMotionPose || deltaTime <= Mathf.Epsilon)
+            {
+                previousMotionPosition = position;
+                previousMotionRotation = rotation;
+                sampledLinearVelocity = Vector3.zero;
+                sampledAngularVelocity = Vector3.zero;
+                hasPreviousMotionPose = true;
+                return;
+            }
+
+            sampledLinearVelocity = (position - previousMotionPosition) / deltaTime;
+            Quaternion delta = rotation * Quaternion.Inverse(previousMotionRotation);
+            delta.ToAngleAxis(out float angleDegrees, out Vector3 axis);
+            if (angleDegrees > 180f) angleDegrees -= 360f;
+            sampledAngularVelocity = axis.sqrMagnitude > 0.000001f
+                ? axis.normalized * (angleDegrees * Mathf.Deg2Rad / deltaTime)
+                : Vector3.zero;
+            previousMotionPosition = position;
+            previousMotionRotation = rotation;
+        }
+
+        private Vector3 GetPointVelocity(Vector3 worldPoint)
+        {
+            Vector3 transformVelocity = sampledLinearVelocity +
+                                        Vector3.Cross(sampledAngularVelocity, worldPoint - motionTransform.position);
+            if (body == null) return transformVelocity;
+            Vector3 rigidbodyVelocity = body.GetPointVelocity(worldPoint);
+            // XRGrabInteractable's Instantaneous and some Kinematic configurations move
+            // the Transform without publishing a useful Rigidbody velocity.
+            return transformVelocity.sqrMagnitude > rigidbodyVelocity.sqrMagnitude
+                ? transformVelocity
+                : rigidbodyVelocity;
         }
 
         private void CreateWetnessTexture()

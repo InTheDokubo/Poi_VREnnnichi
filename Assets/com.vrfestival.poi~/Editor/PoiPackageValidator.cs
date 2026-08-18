@@ -20,6 +20,17 @@ namespace Poi.Editor
                 Debug.LogError("Selected object is missing Rigidbody, PoiGrabTarget/GrabAttach, or PoiPaperSurface.", target);
                 return;
             }
+            Component[] components = target.GetComponentsInChildren<Component>(true);
+            for (int i = 0; i < components.Length; i++)
+            {
+                Component component = components[i];
+                if (component == null || component.GetType().Name != "XRGrabInteractable") continue;
+                if (component.gameObject != target)
+                {
+                    Debug.LogError("XRGrabInteractable must be on PoiRoot, not Handle or another child. Assign GrabAttach as its Attach Transform.", component);
+                    return;
+                }
+            }
             Debug.Log("VR Festival Poi validation passed.", target);
         }
 
