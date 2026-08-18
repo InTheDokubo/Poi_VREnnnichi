@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23f0cfa1750758a459526625c4c241bc, type: 3}
+  m_Name: DefaultPaperSettings
+  m_EditorClassIdentifier: Assembly-CSharp::Poi.PoiPaperSettings
+  breakThreshold: 1
+  damageMultiplier: 1
+  fullyWetStrengthMultiplier: 0.3
+  damageFalloffPower: 1.5
+  wettingRate: 0.75
+  wetnessDiffusionRate: 0.9
+  dryingRate: 0.025
+  wetnessUpdateInterval: 0.1
+  minimumWaterDamageSpeed: 0.35
+  waterDamageMultiplier: 0.7
+  waterEntryMultiplier: 0.35
+  maximumWaterDamagePerSample: 0.18

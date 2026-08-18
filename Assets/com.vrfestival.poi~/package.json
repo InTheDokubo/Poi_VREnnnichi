@@ -1,0 +1,29 @@
+{
+  "name": "com.vrfestival.poi",
+  "version": "1.0.0",
+  "displayName": "VR Festival Poi System",
+  "description": "Lightweight dynamic goldfish-scooping poi and water system for Unity.",
+  "unity": "6000.3",
+  "author": {
+    "name": "VR Festival Poi Contributors"
+  },
+  "dependencies": {
+    "com.unity.modules.physics": "1.0.0",
+    "com.unity.modules.particlesystem": "1.0.0",
+    "com.unity.modules.imgui": "1.0.0"
+  },
+  "keywords": [
+    "vr",
+    "poi",
+    "water",
+    "festival",
+    "goldfish-scooping"
+  ],
+  "samples": [
+    {
+      "displayName": "Basic Sample",
+      "description": "Poi, water, Rigidbody load and wetness demonstration.",
+      "path": "Samples~/Basic Sample"
+    }
+  ]
+}
